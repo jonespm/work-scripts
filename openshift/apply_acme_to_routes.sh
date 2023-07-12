@@ -1,9 +1,7 @@
 #!/bin/bash
 # Script to apply letencrypt certificates to a single projects in Openshift or all projects you have access to
 
-# Global variable for the issuer name, use the staging one for testing
-#ISSUER_NAME="letsencrypt-staging"
-ISSUER_NAME="letsencrypt"
+#!/bin/bash
 
 # Function to create a certificate for a route
 create_route_certificate() {
@@ -23,7 +21,7 @@ spec:
     - $host
   secretName: $cert_name
   issuerRef:
-    name: $ISSUER_NAME
+    name: $issuer_name
     kind: ClusterIssuer
 EOF
 
@@ -33,6 +31,45 @@ EOF
   # Update the route annotation to use the certificate
   oc annotate route "$name" -n "$project" cert-utils-operator.redhat-cop.io/certs-from-secret="$cert_name"
 }
+
+# Initialize variables
+issuer_name="letsencrypt"
+
+# Function to display help text
+display_help() {
+  echo "Usage: $(basename "$0") [OPTIONS] PROJECT"
+  echo "Create and apply certificates for routes in a project. "
+  echo "You must be logged into openshift and have the oc command line available."
+  echo ""
+  echo "Options:"
+  echo "  -t    Use 'letsencrypt-staging' as the issuer name."
+  echo "  -h    Display this help text."
+  echo ""
+  echo "Example:"
+  echo "  $(basename "$0") -t my-project"
+}
+
+# Parse command-line options
+while getopts ":th" opt; do
+  case $opt in
+    t)
+      # Set the issuer name as letsencrypt-staging
+      issuer_name="letsencrypt-staging"
+      ;;
+    h)
+      display_help
+      exit 0
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      display_help
+      exit 1
+      ;;
+  esac
+done
+
+# Shift the parsed options
+shift $((OPTIND - 1))
 
 # Check if a project argument is provided
 if [[ -n $1 ]]; then
@@ -56,6 +93,6 @@ if [[ -n $1 ]]; then
     exit 1
   fi
 else
-  echo "Missing project argument. Please provide the project name."
+  display_help
   exit 1
 fi
