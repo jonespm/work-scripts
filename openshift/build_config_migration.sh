@@ -53,6 +53,8 @@ import_build_configs() {
                 echo "Created ImageStream: $imagestream"
             fi
         fi
+        # Replace 'python:3.10-slim' with 'python:3.10-slim-bullseye' in the build configuration JSON using jq
+        jq '.spec.strategy.sourceStrategy.from.name |= sub("python:3.10-slim"; "python:3.10-slim-bullseye")' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
 
         oc create -f "$file"
         echo "Created build configuration: $name"
