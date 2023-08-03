@@ -29,7 +29,7 @@ EOF
   oc patch route "$name" -n "$project" --type json -p '[{"op": "remove", "path": "/spec/tls/caCertificate"}]'
 
   # Update the route annotation to use the certificate
-  oc annotate route "$name" -n "$project" cert-utils-operator.redhat-cop.io/certs-from-secret="$cert_name"
+  oc annotate route --overwrite "$name" -n "$project" cert-utils-operator.redhat-cop.io/certs-from-secret="$cert_name"
 }
 
 # Initialize variables
